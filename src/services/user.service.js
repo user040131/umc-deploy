@@ -6,7 +6,10 @@ import {
   setPreference,
   insertReview,
   insertMission, 
-  insertAttemptMission
+  insertAttemptMission,
+  getUserMissions,
+  getUserReviews,
+  completeMyMission
 } from "../repositories/user.repository.js";
 
 export const userSignUp = async (data) => {
@@ -18,15 +21,25 @@ export const userSignUp = async (data) => {
     address: data.address,
     detailAddress: data.detailAddress,
     phoneNumber: data.phoneNumber,
+    nickname: data.nickname
   });
 
   if (joinUserId === null) {
     throw new Error("이미 존재하는 이메일입니다.");
   }
 
-  for (const preference of data.preferences) {
-    await setPreference(joinUserId, preference);
+  let userPreferences = [];
+
+  if (Array.isArray(data.preferences)) {
+    userPreferences = data.preferences;
+  } else if (data.preferences) {
+    userPreferences = Object.values(data.preferences).map(Number);
   }
+  // undefined면 [] 그대로 사용
+
+for (const preference of userPreferences) {
+  await setPreference(joinUserId, preference);
+}
 
   const user = await getUser(joinUserId);
   const preferences = await getUserPreferencesByUserId(joinUserId);
@@ -77,4 +90,26 @@ export const attemptMission = async (data) => {
 
 function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+};
+
+export const listUserReviews = async (userId, cursor) => {
+    const reviews = await getUserReviews(userId, cursor);
+
+    if (reviews === null) { throw new Error("리뷰 조회에 실패했습니다."); }
+
+    return reviews; //이것도 dto로 감싸기
+};
+
+export const listUserMissions = async (userId) => {
+    const missions = await getUserMissions(userId);
+    if (missions === null) { throw new Error("미션 조회에 실패했습니다."); }
+
+    return missions; //이것도 dto로 감싸기
+};
+
+export const comMyMission = async (userId, missionId) => {
+    const myMission = await completeMyMission(userId, missionId);
+    if (myMission === null) { throw new Error("미션에서 내 미션으로 이동에 실패했습니다."); }
+
+    return myMission; //이것도 dto로 감싸기
+};

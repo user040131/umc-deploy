@@ -2,14 +2,15 @@ export const bodyToUser = (body) => {
   const birth = new Date(body.birth); //날짜 변환
 
   return {
-    email: body.email, //필수 
-    name: body.name, // 필수
-    gender: body.gender, // 필수
-    birth, // 필수
-    address: body.address || "", //선택 
-    detailAddress: body.detailAddress || "", //선택 
-    phoneNumber: body.phoneNumber,//필수
-    preferences: body.preferences,// 필수 
+    email: body.email,
+    name: body.name,
+    gender: body.gender,
+    birth: new Date(body.birth),
+    address: body.address,
+    detailAddress: body.detailAddress,
+    phoneNumber: body.phoneNumber,
+    nickname: body.nickname,
+    preferences: body.preferences
   };
 };
 
@@ -22,7 +23,7 @@ export const responseFromUser = ({ user, preferences }) => {
         address: user.address,
         detailAddress: user.detailAddress,
         phoneNumber: user.phone_number,
-        preferences: preferences.map((pref) => pref.category)
+        preferences: preferences.map((pref) => pref.food_category_id)
     }
 };
 
@@ -50,5 +51,11 @@ export const bodyToAttemptMission = (body) => {
         created_at: new Date(),
         user_id: body.userId,
         mission_id: body.missionId
+    }
+};
+
+export const bodyToUserId = (body) => {
+    return {
+        user_id: body.userId
     }
 };
