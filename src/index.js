@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 app.post("/api/v1/users/signup", handleUserSignUp);
 app.post("/api/v1/review", handleAddReview); 
 app.post("/api/v1/mission", handleAddMission); 
-app.put("/api/v1/mission", handleAttemptMission); 
+app.post("/api/v1/myMission", handleAttemptMission); 
 app.get("/api/v1/stores/:storeId/reviews", handleListStoreReviews);
 app.get("/api/v1/me/reviews", handleListUserReviews);
 app.get("/api/v1/stores/:storeId/missions", handleListStoreMissions);
