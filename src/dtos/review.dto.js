@@ -7,7 +7,7 @@ export const responseFromReviews = (reviews) => {
   };
 };
 
-export const responseFromMissoins = (missions) => {
+export const responseFromMissions = (missions) => {
   return {
     data: missions,
     pagination: {

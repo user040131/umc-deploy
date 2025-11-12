@@ -1,186 +1,105 @@
-import { pool } from "../db.config.js";
-import { prisma } from '../db.config.js';
+import { prisma } from "../db.config.js";
+import { AppError } from "../errors/AppError.js";
 
-// User 데이터 삽입
-// export const addUser = async (data) => {
-//   const conn = await pool.getConnection();
-
-//   try {
-//     const [confirm] = await pool.query(
-//       `SELECT EXISTS(SELECT 1 FROM user WHERE email = ?) as isExistEmail;`,
-//       data.email
-//     );
-
-//     if (confirm[0].isExistEmail) {
-//       return null;
-//     }
-
-//     const [result] = await pool.query(
-//       `INSERT INTO user (email, name, gender, birth, address, detail_address, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?);`,
-//       [
-//         data.email,
-//         data.name,
-//         data.gender,
-//         data.birth,
-//         data.address,
-//         data.detailAddress,
-//         data.phoneNumber,
-//       ]
-//     );
-
-//     return result.insertId;
-//   } catch (err) {
-//     throw new Error(
-//       `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-//     );
-//   } finally {
-//     conn.release();
-//   }
-// };
 export const addUser = async (data) => {
-  try{
-    const user = await prisma.user.findFirst({ where: { email: data.email } });
-    if (user !== null) {
-      throw new Error("이미 존재하는 유저입니다.");
-    }
+  const exists = await prisma.user.findFirst({ where: { email: data.email }, select: { id: true } });
+  if (exists) throw AppError.conflict("email_exists", { email: data.email });
 
-    const created = await prisma.user.create({ data: data });
+  try {
+    const created = await prisma.user.create({ data });
     return created.id;
-  } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  } finally {
-    await prisma.$disconnect();
+  } catch (e) {
+    
+    if (e?.code === "P2002") throw AppError.conflict("email_exists", { email: data.email });
+    throw e;
   }
 };
 
-// 사용자 정보 얻기
 export const getUser = async (userId) => {
-  const user = await prisma.user.findFirstOrThrow({ where: { id: userId } });
+  const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
+  if (!user) throw AppError.notFound("user_not_found", { userId: Number(userId) });
   return user;
 };
 
-// 음식 선호 카테고리 매핑
 export const setPreference = async (userId, foodCategoryId) => {
-  await prisma.user_favor_category.create({
+  return prisma.user_favor_category.create({
     data: {
-      userId: userId,
-      foodCategoryId: foodCategoryId,
+      user: { connect: { id: Number(userId) } },
+      food_category: { connect: { id: Number(foodCategoryId) } },
     },
   });
 };
 
-// 사용자 선호 카테고리 반환
 export const getUserPreferencesByUserId = async (userId) => {
-  const preferences = await prisma.user_favor_category.findMany({
-    select: {
-      id: true,
-      userId: true,
-      foodCategoryId: true,
-      foodCategory: true,
-    },
-    where: { userId: userId },
+  const prefs = await prisma.user_favor_category.findMany({
+    select: { foodCategoryId: true },
+    where: { userId: Number(userId) },
     orderBy: { foodCategoryId: "asc" },
   });
-
-  return preferences;
+  return prefs.map((p) => p.foodCategoryId);
 };
 
 export const insertReview = async (data) => {
-  try{
-    const restaurant = await prisma.restaurant.findFirst({ where: { restaurantId: data.restaurant_id } });
-    if (restaurant === null) {
-        throw new Error("존재하지 않는 restaurant입니다.");
-    }
-    const review = await prisma.review.create({ data: data });
-    return review;
-  } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  }
+  const restaurant = await prisma.restaurant.findFirst({ where: { restaurantId: data.restaurant_id }, select: { restaurantId: true } });
+  if (!restaurant) throw AppError.notFound("restaurant_not_found", { restaurantId: data.restaurant_id });
+
+  const user = await prisma.user.findFirst({ where: { id: data.user_id }, select: { id: true } });
+  if (!user) throw AppError.notFound("user_not_found", { userId: data.user_id });
+
+  return prisma.review.create({ data });
 };
 
-
 export const insertMission = async (data) => {
-  try{
-    const restaurant = await prisma.restaurant.findFirst({ 
-      where: { restaurantId: data.restaurant_id } 
-    });
-    if (restaurant === null) {
-        throw new Error("존재하지 않는 restaurant입니다.");
-    }
-    const mission = await prisma.mission.create({ data: data });
-    return mission;
-  } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  }
+  const restaurant = await prisma.restaurant.findFirst({ where: { restaurantId: data.restaurant_id }, select: { restaurantId: true } });
+  if (!restaurant) throw AppError.notFound("restaurant_not_found", { restaurantId: data.restaurant_id });
+
+  return prisma.mission.create({ data });
 };
 
 export const insertAttemptMission = async (data) => {
-  try{
-    const myMission = await prisma.my_mission.findFirst({ 
-      where: { missionId: data.mission_id, user_id: data.user_id } 
-    });
-    if (myMission !== null) {
-        throw new Error("이미 내 미션에 존재하는 미션입니다.");
-    }
-    const attemptMission = await prisma.my_mission.create({ data: data });
-    return attemptMission;
-  } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  }
+  const user = await prisma.user.findFirst({ where: { id: data.user_id }, select: { id: true } });
+  if (!user) throw AppError.notFound("user_not_found", { userId: data.user_id });
+
+  const exists = await prisma.my_mission.findFirst({
+    where: { missionId: data.mission_id, user_id: data.user_id },
+    select: { myMissionId: true },
+  });
+  if (exists) throw AppError.conflict("already_joined", { missionId: data.mission_id, userId: data.user_id });
+
+  return prisma.my_mission.create({ data });
 };
 
 export const getUserReviews = async (userId, cursor) => {
-  try{
-    const reviews = await prisma.review.findMany({
-        where: { userId: userId, reviewId: { gt: cursor } }, //gt: cursor -> cursor 이후의 데이터 가져오기, 커서 페이징
-        orderBy: { reviewId: "asc" },
-        take: 5, //한 번에 5개씩 가져오기, LIMIT 5 랑 같은 의미
-    });
-    return reviews;
-  } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  }
+  const user = await prisma.user.findFirst({ where: { id: Number(userId) }, select: { id: true } });
+  if (!user) throw AppError.notFound("user_not_found", { userId: Number(userId) });
+
+  return prisma.review.findMany({
+    where: { userId: Number(userId), reviewId: { gt: Number(cursor) } },
+    orderBy: { reviewId: "asc" },
+    take: 5,
+  });
 };
 
 export const getUserMissions = async (userId) => {
-  try{
-    const missions = await prisma.my_mission.findMany({
-      where: { userId: userId },
-      orderBy: { missionId: "asc" },
-    });
-    return missions;
-  } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  }
+  const user = await prisma.user.findFirst({ where: { id: Number(userId) }, select: { id: true } });
+  if (!user) throw AppError.notFound("user_not_found", { userId: Number(userId) });
+
+  return prisma.my_mission.findMany({
+    where: { userId: Number(userId) },
+    orderBy: { missionId: "asc" },
+  });
 };
 
-export const completeMyMission = async (userId, missionId) => {
-  try{
-    const myMission = await prisma.my_mission.update({
-      where: { userId: userId 
-        , myMissionId: missionId
-      },
-      data: { state: "진행완료" },
-    });
-    if (myMission === null) {
-        throw new Error("미션에서 내 미션으로 이동에 실패했습니다.");
-    }
-    return myMission;
-  } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  }
+export const comMyMission = async (userId, missionId) => {
+  const my = await prisma.my_mission.findFirst({
+    where: { userId: Number(userId), missionId: Number(missionId) },
+    select: { userId: true, missionId: true, state: true },
+  });
+  if (!my) throw AppError.notFound("my_mission_not_found", { userId: Number(userId), missionId: Number(missionId) });
+  if (my.state === "진행완료") throw AppError.conflict("already_completed", { missionId: Number(missionId) });
+
+  return prisma.my_mission.update({
+    where: { userId_missionId: { userId: Number(userId), missionId: Number(missionId) } },
+    data: { state: "진행완료" },
+  });
 };

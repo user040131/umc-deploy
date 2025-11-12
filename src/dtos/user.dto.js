@@ -23,7 +23,7 @@ export const responseFromUser = ({ user, preferences }) => {
         address: user.address,
         detailAddress: user.detailAddress,
         phoneNumber: user.phone_number,
-        preferences: preferences.map((pref) => pref.food_category_id)
+        preferences: preferences
     }
 };
 

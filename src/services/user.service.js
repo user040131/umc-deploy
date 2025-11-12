@@ -9,7 +9,7 @@ import {
   insertAttemptMission,
   getUserMissions,
   getUserReviews,
-  completeMyMission
+  comMyMission
 } from "../repositories/user.repository.js";
 
 export const userSignUp = async (data) => {
@@ -107,8 +107,8 @@ export const listUserMissions = async (userId) => {
     return missions; //이것도 dto로 감싸기
 };
 
-export const comMyMission = async (userId, missionId) => {
-    const myMission = await completeMyMission(userId, missionId);
+export const comMyMissionS = async (userId, missionId) => {
+    const myMission = await comMyMission(userId, missionId);
     if (myMission === null) { throw new Error("미션에서 내 미션으로 이동에 실패했습니다."); }
 
     return myMission; //이것도 dto로 감싸기
