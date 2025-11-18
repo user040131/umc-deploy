@@ -119,6 +119,7 @@ model terms_of_service {
 model user {
   id                    Int                  @id @default(autoincrement()) 
   email                 String                  @unique(map: "uk_user_email") @db.VarChar(255)
+  password              String                  @db.VarChar(255)
   name                  String                  @db.VarChar(100)
   gender                String                  @db.VarChar(20)
   birth                 DateTime                @db.Date

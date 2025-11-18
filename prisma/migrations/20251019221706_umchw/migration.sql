@@ -118,6 +118,7 @@ CREATE TABLE `terms_of_service` (
 CREATE TABLE `user` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `gender` VARCHAR(20) NOT NULL,
     `birth` DATE NOT NULL,

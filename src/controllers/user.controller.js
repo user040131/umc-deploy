@@ -1,34 +1,195 @@
 // controllers/user.controller.js
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../errors/AppError.js";
-
-import {
-  userSignUp,
-  addReview,
-  addMission,
-  attemptMission,
-  listUserReviews,
-  listUserMissions,
-  comMyMissionS,
-} from "../services/user.service.js";
-
-import {
-  bodyToUser,
-  bodyToReview,
-  bodyToMission,
-  bodyToAttemptMission,
-  bodyToUserId,
-} from "../dtos/user.dto.js";
+import { userSignUp, userUpdate } from "../services/user.service.js";
+import { bodyToUser } from "../dtos/user.dto.js";
 
 /* 1) 회원가입 */
 export const handleUserSignUp = async (req, res, next) => {
+  /*
+  #swagger.summary = '회원 가입 API';
+  #swagger.tags = ['User'];
+  #swagger.requestBody = {
+    required: true,
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          required: [
+            "email",
+            "password",
+            "name",
+            "gender",
+            "birth",
+            "address",
+            "detailAddress",
+            "phoneNumber",
+            "preferences"
+          ],
+          properties: {
+            email: {
+              type: "string",
+              description: "이메일(고유 값)",
+              example: "user@example.com"
+            },
+            password: {
+              type: "string",
+              description: "로그인 비밀번호(서버에서 해시 저장)",
+              example: "P@ssw0rd!"
+            },
+            name: {
+              type: "string",
+              description: "이름",
+              example: "박승주"
+            },
+            gender: {
+              type: "string",
+              description: "성별 (예: M/F)",
+              example: "M"
+            },
+            birth: {
+              type: "string",
+              format: "date",
+              description: "생년월일 (YYYY-MM-DD)",
+              example: "2004-01-31"
+            },
+            address: {
+              type: "string",
+              description: "기본 주소",
+              example: "서울특별시 송파구"
+            },
+            detailAddress: {
+              type: "string",
+              description: "상세 주소",
+              example: "잠실 어딘가 아파트"
+            },
+            phoneNumber: {
+              type: "string",
+              description: "휴대폰 번호",
+              example: "01012345678"
+            },
+            nickname: {
+              type: "string",
+              description: "닉네임(선택)",
+              example: "stackers_sj"
+            },
+            preferences: {
+              type: "array",
+              description: "선호 음식 카테고리 ID 배열",
+              items: { type: "number" },
+              example: [1, 2, 3]
+            }
+          }
+        }
+      }
+    }
+  };
+  #swagger.responses[200] = {
+    description: "회원 가입 성공 응답",
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: {
+            resultType: { type: "string", example: "SUCCESS" },
+            error: { type: "object", nullable: true, example: null },
+            success: {
+              type: "object",
+              properties: {
+                email: { type: "string", example: "user@example.com" },
+                name: { type: "string", example: "박승주" },
+                gender: { type: "string", example: "M" },
+                birth: {
+                  type: "string",
+                  description: "ISO 문자열 형태의 날짜",
+                  example: "2004-01-31T00:00:00.000Z"
+                },
+                address: { type: "string", example: "서울특별시 송파구" },
+                detailAddress: { type: "string", example: "잠실 어딘가 아파트" },
+                phoneNumber: { type: "string", example: "01012345678" },
+                preferences: {
+                  type: "array",
+                  description: "저장된 선호 카테고리 ID 배열",
+                  items: { type: "number" },
+                  example: [1, 2, 3]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  };
+  #swagger.responses[400] = {
+    description: "잘못된 요청 (필수 필드 누락 또는 타입 오류)",
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: {
+            resultType: { type: "string", example: "FAIL" },
+            error: {
+              type: "object",
+              properties: {
+                errorCode: {
+                  type: "string",
+                  example: "bad_request",
+                  description: "항상 bad_request"
+                },
+                reason: {
+                  type: "string",
+                  example: "missing_fields",
+                  description: "missing_fields | invalid_field_type 등"
+                },
+                data: {
+                  type: "object",
+                  example: {
+                    missing: ["email","password","name"],
+                    invalid: ["preferences"]
+                  }
+                }
+              }
+            },
+            success: { type: "object", nullable: true, example: null }
+          }
+        }
+      }
+    }
+  };
+  #swagger.responses[409] = {
+    description: "이미 존재하는 이메일로 가입 시도 (email_exists)",
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: {
+            resultType: { type: "string", example: "FAIL" },
+            error: {
+              type: "object",
+              properties: {
+                errorCode: { type: "string", example: "conflict" },
+                reason: { type: "string", example: "email_exists" },
+                data: {
+                  type: "object",
+                  example: { email: "user@example.com" }
+                }
+              }
+            },
+            success: { type: "object", nullable: true, example: null }
+          }
+        }
+      }
+    }
+  };
+*/
+
   try {
     const {
-      email, name, gender, birth, address, detailAddress, phoneNumber, preferences
+      email, password, name, gender, birth, address, detailAddress, phoneNumber, preferences
     } = req.body;
 
     // 누락
-    const required = ["email","name","gender","birth","address","detailAddress","phoneNumber","preferences"];
+    const required = ["email","password","name","gender","birth","address","detailAddress","phoneNumber","preferences"];
     const missing = required.filter(k => {
       const v = req.body?.[k];
       return v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
@@ -36,12 +197,12 @@ export const handleUserSignUp = async (req, res, next) => {
     if (missing.length) throw AppError.badRequest("missing_fields", { missing });
 
     // 타입
-    const mustBeString = { email, name, gender, birth, address, detailAddress, phoneNumber };
+    const mustBeString = { email, password, name, gender, birth, address, detailAddress, phoneNumber };
     const invalidStrings = Object.entries(mustBeString).filter(([, v]) => typeof v !== "string").map(([k]) => k);
     const invalid = [...invalidStrings, ...(Array.isArray(preferences) ? [] : ["preferences"])];
     if (invalid.length) {
       console.log("signup type debug:", {
-        email: typeof email, name: typeof name, gender: typeof gender, birth: typeof birth,
+        email: typeof email, password: typeof password, name: typeof name, gender: typeof gender, birth: typeof birth,
         address: typeof address, detailAddress: typeof detailAddress, phoneNumber: typeof phoneNumber,
         preferences: Array.isArray(preferences) ? "array" : typeof preferences
       });
@@ -53,128 +214,219 @@ export const handleUserSignUp = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-/* 2) 리뷰 작성 */
-export const handleAddReview = async (req, res, next) => {
-  try {
-    const { score, detail, restaurantId, userId } = req.body;
-
-    // 누락
-    const missing = ["score","restaurantId","userId"].filter(k => req.body?.[k] === undefined || req.body?.[k] === null || req.body?.[k] === "");
-    if (missing.length) throw AppError.badRequest("missing_fields", { missing });
-
-    // 타입
-    const invalid =
-      (typeof score !== "number" || !Number.isFinite(score)) ||
-      Number.isNaN(Number(restaurantId)) ||
-      Number.isNaN(Number(userId)) ||
-      (detail !== undefined && detail !== null && typeof detail !== "string");
-    if (invalid) throw AppError.badRequest("invalid_field_type");
-
-    // 범위
-    if (score < 1 || score > 5) throw AppError.badRequest("score_out_of_range");
-
-    const review = await addReview(bodyToReview(req.body));
-    return res.status(StatusCodes.OK).success({ id: review.id });
-  } catch (e) { next(e); }
+export const handleUpdateUser = async (req, res, next) => {
+  /*
+  #swagger.summary = '회원 정보 수정 API';
+  #swagger.tags = ['User'];
+ #swagger.parameters['userId'] = {
+  in: 'path',
+  required: true,
+  schema: { type: 'integer' },
+  example: 1
 };
+  #swagger.requestBody = {
+    required: true,
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          description: "수정하고자 하는 필드만 포함해서 전송",
+          properties: {
+            email: {
+              type: "string",
+              description: "변경할 이메일(선택)",
+              example: "new@example.com"
+            },
+            password: {
+              type: "string",
+              description: "변경할 비밀번호(선택, 서버에서 해시)",
+              example: "NewP@ssw0rd!"
+            },
+            name: {
+              type: "string",
+              description: "변경할 이름(선택)",
+              example: "박승주2"
+            },
+            gender: {
+              type: "string",
+              description: "변경할 성별(선택)",
+              example: "M"
+            },
+            birth: {
+              type: "string",
+              format: "date",
+              description: "변경할 생년월일(선택, YYYY-MM-DD)",
+              example: "2004-01-31"
+            },
+            address: {
+              type: "string",
+              description: "변경할 기본 주소(선택)",
+              example: "서울특별시 강남구"
+            },
+            detailAddress: {
+              type: "string",
+              description: "변경할 상세 주소(선택)",
+              example: "어딘가 오피스텔"
+            },
+            phoneNumber: {
+              type: "string",
+              description: "변경할 휴대폰 번호(선택)",
+              example: "01099998888"
+            },
+            nickname: {
+              type: "string",
+              description: "변경할 닉네임(선택)",
+              example: "stackers_sj2"
+            },
+            preferences: {
+              type: "array",
+              description: "변경할 선호 음식 카테고리 ID 배열(선택, 있으면 덮어씀)",
+              items: { type: "number" },
+              example: [2, 4, 5]
+            }
+          }
+        }
+      }
+    }
+  };
+  #swagger.responses[200] = {
+    description: '회원 정보 수정 성공 응답',
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: {
+            resultType: { type: "string", example: "SUCCESS" },
+            error: { type: "object", nullable: true, example: null },
+            success: {
+              type: "object",
+              description: "수정된 유저 정보",
+              properties: {
+                email: { type: "string", example: "new@example.com" },
+                name: { type: "string", example: "박승주2" },
+                gender: { type: "string", example: "M" },
+                birth: {
+                  type: "string",
+                  description: "ISO 문자열 형태의 날짜",
+                  example: "2004-01-31T00:00:00.000Z"
+                },
+                address: { type: "string", example: "서울특별시 강남구" },
+                detailAddress: { type: "string", example: "어딘가 오피스텔" },
+                phoneNumber: { type: "string", example: "01099998888" },
+                preferences: {
+                  type: "array",
+                  description: "적용된 선호 음식 카테고리 ID 배열",
+                  items: { type: "number" },
+                  example: [2, 4, 5]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  };
+  #swagger.responses[400] = {
+    description: '잘못된 요청 (userId 타입 오류 또는 필드 타입 오류)',
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: {
+            resultType: { type: "string", example: "FAIL" },
+            error: {
+              type: "object",
+              properties: {
+                errorCode: {
+                  type: "string",
+                  example: "bad_request"
+                },
+                reason: {
+                  type: "string",
+                  example: "invalid_field_type"
+                },
+                data: {
+                  type: "object",
+                  example: { invalid: ["email","preferences"] }
+                }
+              }
+            },
+            success: { type: "object", nullable: true, example: null }
+          }
+        }
+      }
+    }
+  };
+  #swagger.responses[404] = {
+    description: '대상 유저를 찾을 수 없음 (user_not_found)',
+    content: {
+      "application/json": {
+        schema: {
+          type: "object",
+          properties: {
+            resultType: { type: "string", example: "FAIL" },
+            error: {
+              type: "object",
+              properties: {
+                errorCode: { type: "string", example: "not_found" },
+                reason: { type: "string", example: "user_not_found" },
+                data: { type: "object", example: { userId: 1 } }
+              }
+            },
+            success: { type: "object", nullable: true, example: null }
+          }
+        }
+      }
+    }
+  };
+*/
 
-/* 3) 미션 작성 */
-export const handleAddMission = async (req, res, next) => {
-  try {
-    const { detail, compensation, restaurantId } = req.body;
+  try{
+    console.log('params:', req.params);
+    console.log('query:', req.query);
+    const userIdRaw = req.params.userId;
+    if (
+      userIdRaw === undefined ||
+      userIdRaw === null ||
+      userIdRaw === "" ||
+      Number.isNaN(Number(userIdRaw))
+    ) {
+      throw AppError.badRequest("invalid_field_type", { invalid: ["userId"] });
+    }
+    const userId = Number(userIdRaw);
 
-    // 누락
-    const missing = ["compensation","restaurantId"].filter(k => req.body?.[k] === undefined || req.body?.[k] === null || req.body?.[k] === "");
-    if (missing.length) throw AppError.badRequest("missing_fields", { missing });
+    const body = req.body;
 
-    // 타입
-    const invalid =
-      (typeof compensation !== "number" || !Number.isFinite(compensation)) ||
-      Number.isNaN(Number(restaurantId)) ||
-      (detail !== undefined && detail !== null && typeof detail !== "string");
-    if (invalid) throw AppError.badRequest("invalid_field_type");
+    // 존재하는 필드만 타입 검사
+    const stringFields = [
+      "email",
+      "password",
+      "name",
+      "gender",
+      "birth",
+      "address",
+      "detailAddress",
+      "phoneNumber",
+      "nickname",
+    ];
 
-    // 범위
-    if (compensation < 0) throw AppError.badRequest("compensation_out_of_range");
+    const invalid = [];
 
-    const mission = await addMission(bodyToMission(req.body));
-    return res.status(StatusCodes.OK).success({ id: mission.id });
-  } catch (e) { next(e); }
-};
-
-/* 4) 미션 수행(내 미션 추가)  — DTO는 body(userId, missionId) 기준 */
-export const handleAttemptMission = async (req, res, next) => {
-  try {
-    const { userId, missionId } = req.body;
-
-    // 누락
-    const missing = ["userId","missionId"].filter(k => req.body?.[k] === undefined || req.body?.[k] === null || req.body?.[k] === "");
-    if (missing.length) throw AppError.badRequest("missing_fields", { missing });
-
-    // 타입
-    if (Number.isNaN(Number(userId)) || Number.isNaN(Number(missionId))) {
-      throw AppError.badRequest("invalid_field_type");
+    for (const key of stringFields) {
+      if (body[key] !== undefined && typeof body[key] !== "string") {
+        invalid.push(key);
+      }
     }
 
-    const my = await attemptMission(bodyToAttemptMission(req.body));
-    return res.status(StatusCodes.OK).success({ id: my.id });
-  } catch (e) { next(e); }
-};
-
-/* 5) 특정 유저 리뷰 목록 조회 — DTO는 bodyToUserId(body) 기준 */
-export const handleListUserReviews = async (req, res, next) => {
-  try {
-    const userId = (req.query?.userId ?? req.body?.userId);
-
-    // 누락·타입
-    if (userId === undefined || userId === null || userId === "") {
-      throw AppError.badRequest("missing_fields", { missing: ["userId"] });
-    }
-    if (Number.isNaN(Number(userId))) throw AppError.badRequest("invalid_field_type");
-
-    const cursor = typeof req.query?.cursor === "string" && !Number.isNaN(Number(req.query.cursor))
-      ? Number(req.query.cursor)
-      : 0;
-
-    const reviews = await listUserReviews(bodyToUserId({ userId }), cursor);
-    return res.status(StatusCodes.OK).json(reviews);
-  } catch (e) { next(e); }
-};
-
-/* 6) 특정 유저 미션 목록 조회 — DTO는 bodyToUserId(body) 기준 */
-export const handleListUserMissions = async (req, res, next) => {
-  try {
-    const userId = (req.query?.userId ?? req.body?.userId);
-
-    if (userId === undefined || userId === null || userId === "") {
-      throw AppError.badRequest("missing_fields", { missing: ["userId"] });
-    }
-    if (Number.isNaN(Number(userId))) throw AppError.badRequest("invalid_field_type");
-
-    const missions = await listUserMissions(bodyToUserId({ userId }));
-    return res.status(StatusCodes.OK).json(missions);
-  } catch (e) { next(e); }
-};
-
-/* 7) 미션 성공 — 경로 param의 missionId + body의 userId */
-export const handleMyMission = async (req, res, next) => {
-  try {
-    const userId = req.body?.userId;
-    const missionIdParam = req.params?.missionId;
-
-    const missing = [];
-    if (userId === undefined || userId === null || userId === "") missing.push("userId");
-    if (missionIdParam === undefined || missionIdParam === null || missionIdParam === "") missing.push("missionId");
-    if (missing.length) throw AppError.badRequest("missing_fields", { missing });
-
-    if (Number.isNaN(Number(userId)) || Number.isNaN(Number(missionIdParam))) {
-      throw AppError.badRequest("invalid_field_type");
+    if (body.preferences !== undefined && !Array.isArray(body.preferences)) {
+      invalid.push("preferences");
     }
 
-    const myMission = await comMyMissionS(
-      bodyToUserId({ userId }),
-      Number(missionIdParam)
-    );
-    return res.status(StatusCodes.OK).json({ myMission });
+    if (invalid.length) {
+      throw AppError.badRequest("invalid_field_type", { invalid });
+    }
+
+    const user = await userUpdate(userId, bodyToUser(req.body));
+    return res.status(StatusCodes.OK).success(user);
   } catch (e) { next(e); }
 };
