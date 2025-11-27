@@ -127,10 +127,12 @@ export const handleAddReview = async (req, res, next) => {
   };
 */
   try {
+    req.body.userId = req.user.id; // JWT 인증된 유저 ID로 덮어쓰기
     const { score, detail, restaurantId, userId } = req.body;
+    console.log("유저 확인: "+ JSON.stringify(req.user.id));
 
     // 누락
-    const missing = ["score","restaurantId","userId"].filter(k => req.body?.[k] === undefined || req.body?.[k] === null || req.body?.[k] === "");
+    const missing = ["score","restaurantId"].filter(k => req.body?.[k] === undefined || req.body?.[k] === null || req.body?.[k] === "");
     if (missing.length) throw AppError.badRequest("missing_fields", { missing });
 
     // 타입

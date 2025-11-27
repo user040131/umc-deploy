@@ -119,13 +119,13 @@ model terms_of_service {
 model user {
   id                    Int                  @id @default(autoincrement()) 
   email                 String                  @unique(map: "uk_user_email") @db.VarChar(255)
-  password              String                  @db.VarChar(255)
-  name                  String                  @db.VarChar(100)
-  gender                String                  @db.VarChar(20)
-  birth                 DateTime                @db.Date
+  password              String?                  @db.VarChar(255) @default("1234")
+  name                  String?                  @db.VarChar(100)
+  gender                String?                  @db.VarChar(20)
+  birth                 DateTime?                @db.Date
   address               String?                 @default("") @db.VarChar(255)
   detailAddress         String?                 @default("") @db.VarChar(255) @map("detail_address")
-  phoneNumber           String                  @db.VarChar(50) @map("phone_number")
+  phoneNumber           String?                  @db.VarChar(50) @map("phone_number")
   numberAuth            Boolean?                @default(false) @map("number_auth")
   createdAt             DateTime?               @default(now()) @db.DateTime(0) @map("created_at")
   nickname              String?                 @db.VarChar(100)
@@ -133,6 +133,7 @@ model user {
   expiredAt             DateTime?               @db.DateTime(0) @map("expired_at")
   isDeleted             Boolean?                @default(false) @map("is_deleted")
   points                Int?                    @default(0) @map("point")
+  providerUserId        String?                 @map("provider_user_id") @db.VarChar(30)
   alarm                 alarm[]
   inquiry               inquiry[]
   myMission             my_mission[]            

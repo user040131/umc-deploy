@@ -382,18 +382,7 @@ export const handleUpdateUser = async (req, res, next) => {
 */
 
   try{
-    console.log('params:', req.params);
-    console.log('query:', req.query);
-    const userIdRaw = req.params.userId;
-    if (
-      userIdRaw === undefined ||
-      userIdRaw === null ||
-      userIdRaw === "" ||
-      Number.isNaN(Number(userIdRaw))
-    ) {
-      throw AppError.badRequest("invalid_field_type", { invalid: ["userId"] });
-    }
-    const userId = Number(userIdRaw);
+    req.userId = req.user.id; // JWT 인증된 유저 ID로 덮어쓰기
 
     const body = req.body;
 

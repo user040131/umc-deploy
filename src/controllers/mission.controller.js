@@ -379,10 +379,11 @@ export const handleAttemptMission = async (req, res, next) => {
   };
 */
   try {
+    req.userId = req.user.id; // JWT 인증된 유저 ID로 덮어쓰기
     const { userId, missionId } = req.body;
 
     // 누락
-    const missing = ["userId","missionId"].filter(k => req.body?.[k] === undefined || req.body?.[k] === null || req.body?.[k] === "");
+    const missing = ["missionId"].filter(k => req.body?.[k] === undefined || req.body?.[k] === null || req.body?.[k] === "");
     if (missing.length) throw AppError.badRequest("missing_fields", { missing });
 
     // 타입
@@ -636,7 +637,7 @@ export const handleMyMission = async (req, res, next) => {
 */
 
   try {
-    const userId = req.body?.userId;
+    const userId = req.user.id; // JWT 인증된 유저 ID로 덮어쓰기
     const missionIdParam = req.params?.missionId;
 
     const missing = [];

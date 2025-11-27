@@ -35,7 +35,15 @@ export const insertReview = async (data) => {
   const user = await prisma.user.findFirst({ where: { id: data.user_id }, select: { id: true } });
   if (!user) throw AppError.notFound("user_not_found", { userId: data.user_id });
 
-  return prisma.review.create({ data });
+  // return prisma.review.create({ data }); 이따구로 하면 에러 뜸. 연관된 restaurant, user는 채워지지 않기에 그것까지 넣어야지 대뜸 data만 넣으면 그게 될리가 있나
+  return prisma.review.create({
+    data: {
+      score: data.score,
+      detail: data.detail,
+      restaurant: { connect: { restaurantId: data.restaurant_id } },
+      user: { connect: { id: data.user_id } },
+    },
+  }).then((review) => review.reviewId);
 };
 
 export const getUserReviews = async (userId, cursor) => {
