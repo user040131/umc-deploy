@@ -260,13 +260,8 @@ export const handleAttemptMission = async (req, res, next) => {
       "application/json": {
         schema: {
           type: "object",
-          required: ["userId", "missionId"],
+          required: ["missionId"],
           properties: {
-            userId: {
-              type: "number",
-              description: "유저 ID",
-              example: 1
-            },
             missionId: {
               type: "number",
               description: "미션 ID",
@@ -514,24 +509,6 @@ export const handleMyMission = async (req, res, next) => {
     required: true,
     schema: { type: 'integer', example: 123 }
   };
-  #swagger.requestBody = {
-    required: true,
-    content: {
-      "application/json": {
-        schema: {
-          type: "object",
-          required: ["userId"],
-          properties: {
-            userId: {
-              type: "number",
-              description: "유저 ID",
-              example: 1
-            }
-          }
-        }
-      }
-    }
-  };
   #swagger.responses[200] = {
     description: '내 미션 성공 처리 완료 (ID DTO 반환)',
     content: {
@@ -556,7 +533,7 @@ export const handleMyMission = async (req, res, next) => {
     }
   };
   #swagger.responses[400] = {
-    description: '잘못된 요청 (userId/missionId 누락 또는 타입 오류)',
+    description: '잘못된 요청 (missionId 누락 또는 타입 오류)',
     content: {
       "application/json": {
         schema: {
@@ -574,7 +551,7 @@ export const handleMyMission = async (req, res, next) => {
                 },
                 data: {
                   type: "object",
-                  example: { missing: ["userId","missionId"] }
+                  example: { missing: ["missionId"] }
                 }
               }
             },

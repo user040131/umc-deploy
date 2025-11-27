@@ -15,7 +15,7 @@ export const handleAddReview = async (req, res, next) => {
       "application/json": {
         schema: {
           type: "object",
-          required: ["score", "restaurantId", "userId"],
+          required: ["score", "restaurantId"],
           properties: {
             score: {
               type: "number",
@@ -32,11 +32,6 @@ export const handleAddReview = async (req, res, next) => {
               type: "number",
               description: "가게(restaurant) ID",
               example: 1
-            },
-            userId: {
-              type: "number",
-              description: "유저 ID",
-              example: 10
             }
           }
         }

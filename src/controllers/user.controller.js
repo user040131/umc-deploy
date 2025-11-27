@@ -218,12 +218,6 @@ export const handleUpdateUser = async (req, res, next) => {
   /*
   #swagger.summary = '회원 정보 수정 API';
   #swagger.tags = ['User'];
- #swagger.parameters['userId'] = {
-  in: 'path',
-  required: true,
-  schema: { type: 'integer' },
-  example: 1
-};
   #swagger.requestBody = {
     required: true,
     content: {
@@ -327,7 +321,7 @@ export const handleUpdateUser = async (req, res, next) => {
     }
   };
   #swagger.responses[400] = {
-    description: '잘못된 요청 (userId 타입 오류 또는 필드 타입 오류)',
+    description: '잘못된 요청 (필드 타입 오류)',
     content: {
       "application/json": {
         schema: {
